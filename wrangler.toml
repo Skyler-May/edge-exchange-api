@@ -1,15 +1,15 @@
-name = "fx-rate-backend"
+name = "edge-exchange-api"   # 建议与 Pages 项目名一致，避免警告
 main = "src/index.ts"
 compatibility_date = "2024-12-18"
 
 [[kv_namespaces]]
 binding = "FX_CACHE"
-id = ""
+# 不写 id，部署后通过 Dashboard 绑定
 
 [[d1_databases]]
 binding = "FX_DB"
 database_name = "fx-db"
-id = ""
+# 不写 id，部署后通过 Dashboard 绑定
 
 [triggers]
 crons = ["*/1 * * * *"]
