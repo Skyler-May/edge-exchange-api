@@ -16,6 +16,7 @@ crons = ["*/1 * * * *"]
 
 [vars]
 RATE_LIMIT = "100"
+API_KEY = "sdfgjksdfgjklsdfgkl"
 
 [env.production]
 vars = { RATE_LIMIT = "200" }
