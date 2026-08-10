@@ -1,0 +1,12 @@
+# Wrangler 本地状态
+.wrangler/
+node_modules/
+dist/
+
+# 本地环境变量（可能包含密钥）
+.env
+.dev.vars
+*.local
+
+# 构建产物
+build/

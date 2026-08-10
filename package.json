@@ -1,0 +1,23 @@
+{
+  "name": "edge-exchange-api",
+  "version": "1.0.0",
+  "description": "Crypto rate aggregator with multi-source failover and admin API",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "itty-router": "^5.0.24"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260810.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.120.1"
+  }
+}
