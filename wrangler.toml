@@ -2,30 +2,23 @@ name = "fx-rate-backend"
 main = "src/index.ts"
 compatibility_date = "2024-12-18"
 
-# ---------- 资源绑定 ----------
-# 注意：以下 ID 是资源标识符，非敏感信息，可提交至仓库
-# 请将占位符替换为从 `npx wrangler kv:namespace create` 和 `npx wrangler d1 create` 获得的真实 ID
-
 [[kv_namespaces]]
 binding = "FX_CACHE"
-id = "your-real-kv-id"   # 替换为真实 KV Namespace ID
+id = ""
 
 [[d1_databases]]
 binding = "FX_DB"
 database_name = "fx-db"
-database_id = "your-real-d1-id"   # 替换为真实 D1 Database ID
+id = ""
 
-# ---------- 定时触发器 ----------
 [triggers]
-crons = ["*/1 * * * *"]   # 每分钟执行一次
+crons = ["*/1 * * * *"]
 
-# ---------- 公共环境变量（非敏感） ----------
 [vars]
-RATE_LIMIT = "100"   # 每 IP 每分钟请求数限制
+RATE_LIMIT = "100"
 
-# ---------- 生产环境覆盖 ----------
 [env.production]
-vars = { RATE_LIMIT = "200" }   # 生产环境提高限流阈值
+vars = { RATE_LIMIT = "200" }
 
 # ---------- 本地开发环境（可选） ----------
 # 如需在本地使用代理，可取消注释并在 .dev.vars 中配置
