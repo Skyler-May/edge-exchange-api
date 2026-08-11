@@ -1,5 +1,5 @@
-import { Env, DataSource } from '../types/index.js';
-import { getCache, setCache, deleteCache } from '../utils/cache.js';
+import { Env, DataSource } from '../types/index';
+import { getCache, setCache, deleteCache } from '../utils/cache';
 
 const SOURCES_CACHE_KEY = 'active_sources';
 

@@ -1,7 +1,7 @@
 import { Router } from 'itty-router';
-import { Env } from '../types/index.js';
-import { getActiveSources, addSource, deleteSource, updateSource } from '../services/sourceRegistry.js';
-import { jsonResponse, errorResponse } from '../utils/response.js';
+import { Env } from '../types/index';
+import { getActiveSources, addSource, deleteSource, updateSource } from '../services/sourceRegistry';
+import { jsonResponse, errorResponse } from '../utils/response';
 
 const adminRouter = Router();
 

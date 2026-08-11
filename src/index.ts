@@ -1,10 +1,15 @@
-import { Env } from './types/index.js';
-import { getLatestRate, getHistory, fetchAndStoreAllRates } from './services/fetcher.js';
-import { addSource, deleteSource, getActiveSources, getStatus, updateSource } from './services/sourceRegistry.js';
-import { jsonResponse, errorResponse } from './utils/response.js';
-import { rateLimiter } from './utils/rateLimiter.js';
-import { getApiDocs } from './views/docs.js';
-import { getAdminPanel } from './views/panel.js';
+import { getLatestRate, getHistory, fetchAndStoreAllRates } from "./services/fetcher";
+import { getStatus, getActiveSources, addSource, updateSource, deleteSource } from "./services/sourceRegistry";
+import { Env } from "./types";
+import { rateLimiter } from "./utils/rateLimiter";
+import { jsonResponse, errorResponse } from "./utils/response";
+import { getApiDocs } from "./views/docs";
+import { getAdminPanel } from "./views/panel";
+
+// Cron 防重叠锁的 KV key 与 TTL
+// TTL 略大于单次 cron 预期最长执行时间，防止 Worker 异常退出导致锁卡死
+const CRON_LOCK_KEY = 'cron:lock';
+const CRON_LOCK_TTL_SECONDS = 90;
 
 // ---------- 限流函数 ----------
 async function checkRateLimit(request: Request, env: Env): Promise<boolean> {
@@ -153,13 +158,29 @@ export default {
 
   // 定时任务
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
-    console.log('⏰ Cron triggered at', new Date().toISOString());
+    console.log('⏰ Cron triggered at', new Date().toISOString(), 'pattern:', event.cron);
     (env as any).ctx = ctx;
+
+    // ---------- 防重叠锁 ----------
+    // 如果上一次 scheduled() 因为数据源变多、超时重试等原因还没跑完，
+    // 直接跳过本次触发，避免同一批交易对被并发写入两次、fail_count 被并发更新出现竞态。
+    const existingLock = await env.FX_CACHE.get(CRON_LOCK_KEY);
+    if (existingLock) {
+      console.log('⏭️ 上一次 Cron 仍在执行（锁未释放），跳过本次触发');
+      return;
+    }
+    await env.FX_CACHE.put(CRON_LOCK_KEY, String(Date.now()), {
+      expirationTtl: CRON_LOCK_TTL_SECONDS
+    });
+
     try {
       const result = await fetchAndStoreAllRates(env);
       console.log(`✅ Cron success, ${result.length} pairs updated`);
     } catch (err) {
       console.error('❌ Cron error:', err);
+    } finally {
+      // 主动释放锁，不用等 TTL 过期，缩短下一次触发的等待窗口
+      await env.FX_CACHE.delete(CRON_LOCK_KEY);
     }
   }
 };

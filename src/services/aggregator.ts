@@ -1,4 +1,4 @@
-import { Env } from '../types/index.js';
+import { Env } from '../types/index';
 
 export async function aggregateHourly(env: Env): Promise<void> {
   const now = Math.floor(Date.now() / 1000);
