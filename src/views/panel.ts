@@ -5,80 +5,390 @@ export function getAdminPanel(apiKey: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🔧 Admin 管理面板</title>
+  <title>⚡ FX Gateway | Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    /* === 样式完全保留您已有的，此处省略以节省篇幅，实际替换时请原样保留 === */
+    :root {
+      --bg: #030712;
+      --card-bg: rgba(17, 24, 39, 0.7);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(56, 189, 248, 0.5);
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --accent: #6366f1;
+      --text: #f9fafb;
+      --text-dim: #9ca3af;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #0b0e14; color: #e8edf3; padding: 2rem 1.5rem; min-height: 100vh; }
-    .container { max-width: 1200px; margin: 0 auto; }
-    h1 { font-size: 2rem; margin-bottom: 0.25rem; color: #f6b26b; }
-    .subtitle { color: #8892a0; margin-bottom: 2rem; border-bottom: 1px solid #1e2630; padding-bottom: 1rem; }
-    .actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
-    .actions input, .actions select, .actions button { padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid #232c38; background: #141b24; color: #e8edf3; font-size: 0.95rem; }
-    .actions button { background: #f6b26b; color: #0b0e14; font-weight: 600; cursor: pointer; border: none; }
-    .actions button:hover { background: #f9d976; }
-    .card { background: #141b24; border-radius: 16px; padding: 1.5rem; border: 1px solid #232c38; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-    .card .info { flex: 1; }
-    .card .info strong { color: #f6b26b; }
-    .card .info .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; margin-left: 0.5rem; }
-    .badge.healthy { background: #1e3a2a; color: #7ddf9a; }
-    .badge.cooldown { background: #3a2a1e; color: #f5a97f; }
-    .badge.inactive { background: #3a1e1e; color: #f28b82; }
-    .card .actions-btn button { background: none; border: 1px solid #3e4c5e; color: #b0bec5; padding: 0.3rem 0.8rem; border-radius: 6px; cursor: pointer; margin-left: 0.5rem; }
-    .card .actions-btn button:hover { background: #1e2630; }
-    .card .actions-btn .delete { border-color: #8b3a3a; color: #f28b82; }
-    .card .actions-btn .delete:hover { background: #3a1e1e; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2.5rem 1.5rem;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 70%),
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 30px 30px, 30px 30px;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* 顶部 App Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+
+    /* 指标仪表盘 Dashboard Metrics */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 1.25rem;
+      border-radius: 14px;
+      backdrop-filter: blur(12px);
+    }
+
+    .metric-card .title {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .metric-card .value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 0.25rem;
+      color: #fff;
+    }
+
+    /* 操作区 Quick Form */
+    .control-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    .form-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1.5fr 2fr 1fr auto auto;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    input, select {
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(3, 7, 18, 0.6);
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+    }
+
+    .btn {
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4); }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+    /* 数据源卡片 Source List */
+    .list-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .source-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(12px);
+      transition: all 0.2s ease;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .source-card:hover {
+      border-color: rgba(56, 189, 248, 0.3);
+      transform: translateX(4px);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .info-main {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .info-main strong {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .badge {
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .badge.healthy { background: rgba(52, 211, 153, 0.15); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.3); }
+    .badge.cooldown { background: rgba(251, 191, 36, 0.15); color: var(--warning); border: 1px solid rgba(251, 191, 36, 0.3); }
+    .badge.active { background: rgba(56, 189, 248, 0.15); color: var(--primary); border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge.inactive { background: rgba(248, 113, 113, 0.15); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
+
+    .info-sub {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1.5;
+    }
+
+    .btn-icon {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .btn-icon.danger:hover { background: rgba(248, 113, 113, 0.2); color: var(--danger); border-color: rgba(248, 113, 113, 0.4); }
+
+    /* Modal 弹窗 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(3, 7, 18, 0.8);
+      backdrop-filter: blur(8px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
     .modal.active { display: flex; }
-    .modal-content { background: #141b24; padding: 2rem; border-radius: 16px; max-width: 500px; width: 90%; border: 1px solid #232c38; }
-    .modal-content h2 { margin-bottom: 1rem; color: #f6b26b; }
-    .modal-content input { width: 100%; padding: 0.6rem 1rem; margin-bottom: 0.8rem; border-radius: 8px; border: 1px solid #232c38; background: #0d1219; color: #e8edf3; }
-    .modal-content .btn-row { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 0.5rem; }
-    .modal-content .btn-row button { padding: 0.6rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
-    .modal-content .btn-row .save { background: #f6b26b; color: #0b0e14; }
-    .modal-content .btn-row .cancel { background: #232c38; color: #b0bec5; }
-    .toast { position: fixed; bottom: 2rem; right: 2rem; background: #141b24; padding: 1rem 1.5rem; border-radius: 12px; border: 1px solid #3e4c5e; color: #e8edf3; display: none; }
-    .toast.show { display: block; }
-    .toast.success { border-color: #7ddf9a; }
-    .toast.error { border-color: #f28b82; }
-    @media (max-width: 600px) { body { padding: 1rem; } .card { flex-direction: column; align-items: flex-start; } }
+
+    .modal-content {
+      background: #0b1329;
+      padding: 2rem;
+      border-radius: 20px;
+      max-width: 480px;
+      width: 90%;
+      border: 1px solid var(--border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-content h2 { margin-bottom: 1.25rem; font-size: 1.25rem; color: #fff; }
+
+    /* Toast 通知 */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #0f172a;
+      padding: 0.85rem 1.5rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 500;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 2000;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--success); }
+    .toast.error { border-color: var(--danger); }
+
+    @media (max-width: 768px) {
+      .actions { grid-template-columns: 1fr; }
+      .source-card { flex-direction: column; align-items: flex-start; gap: 1rem; }
+      .card-actions { width: 100%; display: flex; justify-content: flex-end; }
+    }
   </style>
 </head>
 <body>
 <div class="container">
-  <h1>🔧 数据源管理</h1>
-  <div class="subtitle">管理所有交易所数据源，实时生效</div>
-  <div class="actions">
-    <input type="text" id="newName" placeholder="名称 (如 Kraken)" />
-    <input type="text" id="newUrl" placeholder="API 地址" />
-    <input type="number" id="newPriority" placeholder="优先级" value="10" />
-    <button id="addBtn">➕ 添加数据源</button>
-    <button id="refreshBtn">🔄 刷新</button>
+  
+  <div class="header">
+    <div class="brand">
+      <h1>⚡ Control Panel</h1>
+      <p>FX Gateway 节点控制器 & 数据源聚合路由管理</p>
+    </div>
+    <button class="btn btn-secondary" onclick="copyApiKey()">🔑 复制 API Key</button>
   </div>
-  <div id="sourceList"></div>
+
+  <!-- Dashboard 指标板 -->
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="title">数据源总数</div>
+      <div class="value" id="statTotal">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="title">在线/启用</div>
+      <div class="value" style="color: var(--success)" id="statActive">0</div>
+    </div>
+    <div class="metric-card">
+      <div class="title">熔断/冷却中</div>
+      <div class="value" style="color: var(--warning)" id="statCooldown">0</div>
+    </div>
+  </div>
+
+  <!-- 操作入口 -->
+  <div class="control-panel">
+    <div class="form-title">➕ 动态挂载新数据源</div>
+    <div class="actions">
+      <input type="text" id="newName" placeholder="源名称 (如 Binance)" />
+      <input type="text" id="newUrl" placeholder="API Endpoint 完整地址" />
+      <input type="number" id="newPriority" placeholder="权重 (默认 10)" value="10" />
+      <button class="btn btn-primary" id="addBtn">添加数据源</button>
+      <button class="btn btn-secondary" id="refreshBtn">🔄 刷新</button>
+    </div>
+  </div>
+
+  <!-- 列表 -->
+  <div class="list-title">
+    <span>运行节点一览</span>
+  </div>
+  
+  <div id="sourceList" class="card-grid"></div>
 </div>
-<!-- 编辑弹窗 -->
+
+<!-- Modal 编辑框 -->
 <div class="modal" id="editModal">
   <div class="modal-content">
-    <h2>✏️ 编辑数据源</h2>
-    <input type="text" id="editName" placeholder="名称" />
-    <input type="text" id="editUrl" placeholder="API 地址" />
-    <input type="number" id="editPriority" placeholder="优先级" />
-    <div style="margin-bottom:0.8rem;">
-      <label style="color:#8892a0; display:flex; align-items:center; gap:0.5rem;">
-        <input type="checkbox" id="editActive" checked /> 启用
+    <h2>✏️ 编辑数据源配置</h2>
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      <input type="text" id="editName" placeholder="数据源名称" />
+      <input type="text" id="editUrl" placeholder="API Endpoint" />
+      <input type="number" id="editPriority" placeholder="优先级" />
+      <label style="color: var(--text-dim); display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+        <input type="checkbox" id="editActive" style="width: auto;" /> 启用此数据源
       </label>
-    </div>
-    <div class="btn-row">
-      <button class="cancel" id="editCancel">取消</button>
-      <button class="save" id="editSave">💾 保存</button>
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem;">
+        <button class="btn btn-secondary" id="editCancel">取消</button>
+        <button class="btn btn-primary" id="editSave">💾 保存配置</button>
+      </div>
     </div>
   </div>
 </div>
+
 <div class="toast" id="toast"></div>
+
 <script>
   const API_BASE = '/api/admin/sources';
-  const API_KEY = '${apiKey}';  // 由服务端注入，不再硬编码
+  const API_KEY = '${apiKey}';
 
   let sources = [];
   let editingId = null;
@@ -90,21 +400,33 @@ export function getAdminPanel(apiKey: string): string {
     setTimeout(() => el.classList.remove('show'), 3000);
   };
 
+  const copyApiKey = () => {
+    navigator.clipboard.writeText(API_KEY);
+    toast('🔑 API Key 已复制到剪贴板');
+  };
+
+  const updateMetrics = () => {
+    document.getElementById('statTotal').textContent = sources.length;
+    document.getElementById('statActive').textContent = sources.filter(s => s.is_active === 1).length;
+    document.getElementById('statCooldown').textContent = sources.filter(s => s.fail_count >= 3).length;
+  };
+
   const fetchSources = async () => {
     try {
       const res = await fetch(API_BASE, { headers: { 'x-api-key': API_KEY } });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       sources = await res.json();
       renderSources();
+      updateMetrics();
     } catch (e) {
-      toast('加载失败: ' + e.message, 'error');
+      toast('加载数据失败: ' + e.message, 'error');
     }
   };
 
   const renderSources = () => {
     const list = document.getElementById('sourceList');
     if (!sources.length) {
-      list.innerHTML = '<p style="color:#8892a0;">暂无数据源，请添加</p>';
+      list.innerHTML = '<div style="text-align:center; padding:3rem; color:var(--text-dim);">暂无活跃数据源，请在上方添加</div>';
       return;
     }
     const sorted = [...sources].sort((a,b) => a.priority - b.priority);
@@ -112,19 +434,21 @@ export function getAdminPanel(apiKey: string): string {
       const status = s.is_active === 1 ? 'active' : 'inactive';
       const health = s.fail_count >= 3 ? 'cooldown' : 'healthy';
       return \`
-        <div class="card">
+        <div class="source-card">
           <div class="info">
-            <strong>\${s.name}</strong>
-            <span class="badge \${health}">\${health === 'healthy' ? '✅ 健康' : '❄️ 冷却'}</span>
-            <span class="badge \${status}">\${status === 'active' ? '🟢 启用' : '⛔ 禁用'}</span>
-            <div style="font-size:0.85rem;color:#8892a0;margin-top:0.3rem;">
-              ID: \${s.id} · 优先级: \${s.priority} · 失败: \${s.fail_count}次
-              <br/><span style="word-break:break-all;">\${s.base_url}</span>
+            <div class="info-main">
+              <strong>\${s.name}</strong>
+              <span class="badge \${health}">\${health === 'healthy' ? '⚡ HEALTHY' : '❄️ COOLDOWN'}</span>
+              <span class="badge \${status}">\${status === 'active' ? 'ONLINE' : 'OFFLINE'}</span>
+            </div>
+            <div class="info-sub">
+              ID: \${s.id} &nbsp;|&nbsp; 权重: \${s.priority} &nbsp;|&nbsp; 异常计数: \${s.fail_count}
+              <br/><span style="color: rgba(255,255,255,0.4);">\${s.base_url}</span>
             </div>
           </div>
-          <div class="actions-btn">
-            <button onclick="editSource(\${s.id})">✏️</button>
-            <button class="delete" onclick="deleteSource(\${s.id})">🗑️</button>
+          <div class="card-actions" style="display: flex; gap: 0.5rem;">
+            <button class="btn-icon" onclick="editSource(\${s.id})" title="编辑">✏️</button>
+            <button class="btn-icon danger" onclick="deleteSource(\${s.id})" title="删除">🗑️</button>
           </div>
         </div>
       \`;
@@ -135,7 +459,7 @@ export function getAdminPanel(apiKey: string): string {
     const name = document.getElementById('newName').value.trim();
     const base_url = document.getElementById('newUrl').value.trim();
     const priority = parseInt(document.getElementById('newPriority').value) || 10;
-    if (!name || !base_url) { toast('请填写名称和地址', 'error'); return; }
+    if (!name || !base_url) { toast('请填写真实有效的名称与地址', 'error'); return; }
     try {
       const res = await fetch(API_BASE, {
         method: 'POST',
@@ -143,24 +467,24 @@ export function getAdminPanel(apiKey: string): string {
         body: JSON.stringify({ name, base_url, priority })
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      toast('✅ ' + name + ' 添加成功');
+      toast('✅ 数据源 ' + name + ' 已成功部署挂载');
       document.getElementById('newName').value = '';
       document.getElementById('newUrl').value = '';
       fetchSources();
     } catch (e) {
-      toast('添加失败: ' + e.message, 'error');
+      toast('挂载失败: ' + e.message, 'error');
     }
   };
 
   const deleteSource = async (id) => {
-    if (!confirm('确定要删除 ID=' + id + ' 的数据源吗？')) return;
+    if (!confirm('确定要彻底卸载 ID=' + id + ' 的数据源节点吗？')) return;
     try {
       const res = await fetch(API_BASE + '/' + id, {
         method: 'DELETE',
         headers: { 'x-api-key': API_KEY }
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      toast('🗑️ 删除成功');
+      toast('🗑️ 节点卸载成功');
       fetchSources();
     } catch (e) {
       toast('删除失败: ' + e.message, 'error');
@@ -192,7 +516,7 @@ export function getAdminPanel(apiKey: string): string {
         body: JSON.stringify({ name, base_url, priority, is_active })
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      toast('💾 更新成功');
+      toast('💾 节点配置更新成功');
       document.getElementById('editModal').classList.remove('active');
       fetchSources();
     } catch (e) {
