@@ -334,7 +334,7 @@ export function getApiDocs(): string {
 
   <div class="footer">
     <p>🚀 极速容灾响应 · 熔断自愈 · 智能限流保护 · 历史聚合引擎</p>
-    <p style="margin-top: 0.5rem;">项目源码 · <a href="https://github.com/your-repo" target="_blank">GitHub Repository</a> &nbsp;|&nbsp; Deployed on Cloudflare Workers</p>
+    <p style="margin-top: 0.5rem;">项目源码 · <a href="https://github.com/Skyler-May" target="_blank">GitHub Repository</a> &nbsp;|&nbsp; Deployed on Cloudflare Workers</p>
   </div>
 </div>
 </body>

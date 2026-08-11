@@ -200,3 +200,4 @@ INSERT INTO data_sources (name, base_url, priority, is_main) VALUES
 4. 绑定 `D1`,`KV`;（变量名必须：`FX_DB`, `FX_CACHE`）
 5. 设置 `API_KEY` 密钥;（任意）
 6. 绑定域名;
+7. 变量与机密；（必须：`API_KEY`,值任意）
