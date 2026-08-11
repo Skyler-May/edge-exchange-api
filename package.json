@@ -6,8 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "migrate": "wrangler d1 execute fx-db --remote --file=migrations/001_init.sql",
-    "deploy": "npm run migrate && wrangler deploy",
+    "deploy": "wrangler deploy",
     "dev": "wrangler dev"
   },
   "keywords": [],
