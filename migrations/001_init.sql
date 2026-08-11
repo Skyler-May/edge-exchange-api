@@ -54,4 +54,5 @@ CREATE TABLE IF NOT EXISTS system_logs (
 INSERT OR IGNORE INTO data_sources (name, base_url, priority, is_main) VALUES 
 ('Binance','https://api.binance.com/api/v3/ticker/price',1,true),
 ('OKX','https://www.okx.com/api/v5/market/ticker',2,true),
-('Coinbase','https://api.coinbase.com/v2/prices/spot',3,true);
+('Coinbase','https://api.coinbase.com/v2/prices/spot',3,true),
+('GateIo','https://api.gateio.ws/api/v4/spot/tickers',4,true);
