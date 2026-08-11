@@ -1,32 +1,17 @@
-name = "edge-exchange-api"   # 建议与 Pages 项目名一致，避免警告
+name = "exchange-api"   # 建议与 Pages 项目名一致，避免警告
 main = "src/index.ts"
-compatibility_date = "2024-12-18"
-keep_vars = true
+compatibility_date = "2025-11-04"
 
-# 本地开发时的绑定（仅用于 wrangler dev）
-# name = "edge-exchange-api"
-# main = "src/index.ts"
-# compatibility_date = "2024-12-18"
-# keep_vars = true
-# 
-# [[kv_namespaces]]
-# binding = "FX_CACHE"
-# id = "local-kv-id" 
-# 
-# [[d1_databases]]
-# binding = "FX_DB"
-# database_name = "fx-db"
-# id = "local-d1-id
-# 
-# [triggers]
-# crons = ["*/1 * * * *"]
-# 
-# [vars]
-# RATE_LIMIT = "100"
-# API_KEY = "sdfgjksdfgjklsdfgkl"
-# 
-# [env.production]
-# vars = { RATE_LIMIT = "200" }
+[triggers]
+crons = ["*/1 * * * *"]
+
+[vars]
+RATE_LIMIT = "100"
+
+[env.production]
+vars = { RATE_LIMIT = "200" }
+
+keep_vars = true
 
 # ---------- 本地开发环境（可选） ----------
 # 如需在本地使用代理，可取消注释并在 .dev.vars 中配置

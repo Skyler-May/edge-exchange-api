@@ -189,3 +189,14 @@ INSERT INTO data_sources (name, base_url, priority, is_main) VALUES
 - WebSocket 支持：添加 Durable Objects 实现实时推送。
 - 反向汇率：在 fetcher.js 中增加 getRatePair 自动处理反向。
 - 监控告警：通过 system_logs 表配合 Worker 的 sendEmail 实现报警。
+
+## 九、首次部署流程
+
+登录 Cloudflare 账号：
+
+1. 创建 `D1` 数据库;（任意：`fx_db`）
+2. 创建 `KV` 命名空间;（任意：`fx`）
+3. 创建 `works`,拉取仓库代码;
+4. 绑定 `D1`,`KV`;（变量名必须：`FX_DB`, `FX_CACHE`）
+5. 设置 `API_KEY` 密钥;（任意）
+6. 绑定域名;
