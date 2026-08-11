@@ -121,7 +121,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
   // ========== 6. Admin 管理面板（图形界面） ==========
   if (path === '/admin') {
-    const adminHtml = getAdminPanel(env.API_KEY || '');
+    const adminHtml = getAdminPanel(''); // 传入空字符串，让前端纯依赖用户在登录框输入的 Key
     return new Response(adminHtml, {
       status: 200,
       headers: { 'Content-Type': 'text/html' }
