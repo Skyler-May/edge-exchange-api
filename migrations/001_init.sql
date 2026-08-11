@@ -51,9 +51,17 @@ CREATE TABLE IF NOT EXISTS system_logs (
   timestamp INTEGER DEFAULT (strftime('%s', 'now'))
 );
 
+-- 初始化主流交易所（只执行一次）
 INSERT OR IGNORE INTO data_sources (name, base_url, priority, is_main) VALUES 
 ('Binance','https://api.binance.com/api/v3/ticker/price',1,true),
 ('OKX','https://www.okx.com/api/v5/market/ticker',2,true),
 ('Coinbase','https://api.coinbase.com/v2/prices/spot',3,true),
 ('GateIo','https://api.gateio.ws/api/v4/spot/tickers',4,true),
 ('Frankfurter','https://api.frankfurter.app/latest?from={base}&to={target}',5,true);
+
+-- 为已有数据源补充 config（幂等，重复执行无害）
+UPDATE data_sources SET config = '{"price_path":"price"}' WHERE name = 'Binance' AND config IS NULL;
+UPDATE data_sources SET config = '{"price_path":"data[0].last"}' WHERE name = 'OKX' AND config IS NULL;
+UPDATE data_sources SET config = '{"price_path":"data.amount"}' WHERE name = 'Coinbase' AND config IS NULL;
+UPDATE data_sources SET config = '{"list_path":"tickers","item_key":"currency_pair","item_value":"{base}_{target}","price_path_in_item":"last"}' WHERE name = 'GateIo' AND config IS NULL;
+UPDATE data_sources SET config = '{"price_path":"rates.{target}"}' WHERE name = 'Frankfurter' AND config IS NULL;
