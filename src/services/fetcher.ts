@@ -7,9 +7,17 @@ import { isInCooldown } from '../utils/circuitBreaker.js';
 import { aggregateHourly } from './aggregator.js';
 
 const PAIRS = [
+  // 核心交易对（重点）
   { base: 'BTC', target: 'USDT' },
   { base: 'ETH', target: 'USDT' },
+  { base: 'TRX', target: 'USDT' },
+    // 备用主流币种
   { base: 'SOL', target: 'USDT' },
+  { base: 'BNB', target: 'USDT' },
+  { base: 'XRP', target: 'USDT' },
+  { base: 'ADA', target: 'USDT' },
+  { base: 'DOT', target: 'USDT' },
+  { base: 'DOGE', target: 'USDT' },
 ];
 
 function buildUrl(baseUrl: string, base: string, target: string): string {
