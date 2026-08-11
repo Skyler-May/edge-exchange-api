@@ -1,19 +1,12 @@
-name = "exchange-api"   # 建议与 Pages 项目名一致，避免警告
+name = "exchange-api"
 main = "src/index.ts"
 compatibility_date = "2025-11-04"
+
+# 开启变量保留，部署时绝对不清空 Dashboard 里的 API_KEY 等 Secret
+keep_vars = true
 
 [triggers]
 crons = ["0 */1 * * *"]
 
 [vars]
-RATE_LIMIT = "100"
-
-[env.production]
-vars = { RATE_LIMIT = "200" }
-
-keep_vars = true
-
-# ---------- 本地开发环境（可选） ----------
-# 如需在本地使用代理，可取消注释并在 .dev.vars 中配置
-# [env.dev]
-# vars = { HTTP_PROXY = "http://127.0.0.1:7897" }
+RATE_LIMIT = "200"
