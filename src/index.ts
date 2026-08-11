@@ -293,7 +293,6 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     console.log('[Admin] Request received:', path); // 调试日志
 
     // 验证 API Key
-    console.log('[Debug] API_KEY from env:', env.API_KEY);
     const apiKey = request.headers.get('x-api-key');
     if (apiKey !== env.API_KEY) {
       console.log('[Admin] Unauthorized: invalid API Key');

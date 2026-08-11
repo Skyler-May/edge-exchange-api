@@ -31,16 +31,19 @@ function buildUrl(baseUrl: string, base: string, target: string): string {
   return baseUrl.replace(/\{base\}/g, base).replace(/\{target\}/g, target);
 }
 
-function parsePrice(sourceName: string, data: any): number | null {
+function parsePrice(sourceName: string, data: any, base: string, target: string): number | null {
   try {
     if (sourceName === 'Binance') return parseFloat(data.price);
     if (sourceName === 'OKX') return parseFloat(data.data?.[0]?.last);
     if (sourceName === 'Coinbase') return parseFloat(data.data?.amount);
     if (sourceName === 'CryptoCompare') {
-      // CryptoCompare 返回 { "USD": 60000 } 或类似，但 tsyms 是目标币种
-      // 由于我们请求的是 USDT，所以取 data.USDT
-      const target = Object.keys(data)[0] || 'USDT';
-      return parseFloat(data[target]);
+      const targetKey = Object.keys(data)[0] || 'USDT';
+      return parseFloat(data[targetKey]);
+    }
+    if (sourceName === 'Gate.io') {
+      // 注意：Gate.io 的 currency_pair 格式为 "BTC_USDT"
+      const ticker = data.tickers?.find((t: any) => t.currency_pair === `${base}_${target}`);
+      return ticker ? parseFloat(ticker.last) : null;
     }
     // 通用兜底
     return parseFloat(data.price || data.last || data.close || data.rate);
@@ -58,7 +61,7 @@ async function doFetch(source: DataSource, base: string, target: string): Promis
     clearTimeout(timeout);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
-    return parsePrice(source.name, data);
+    return parsePrice(source.name, data, base, target);
   } catch (err) {
     clearTimeout(timeout);
     throw err;
