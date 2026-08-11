@@ -3,7 +3,7 @@ export interface Env {
   FX_DB: D1Database;
   API_KEY?: string;
   RATE_LIMIT?: string;
-  ctx?: ExecutionContext; // 由 worker 注入
+  ctx?: ExecutionContext; 
 }
 
 export interface DataSource {
@@ -16,6 +16,8 @@ export interface DataSource {
   timeout_ms: number;
   fail_count: number;
   last_fail_time: string | null;
+  created_at: string;
+  config?: string;
 }
 
 export interface RateResult {

@@ -3,7 +3,7 @@ main = "src/index.ts"
 compatibility_date = "2025-11-04"
 
 [triggers]
-crons = ["*/1 * * * *"]
+crons = ["0 */1 * * *"]
 
 [vars]
 RATE_LIMIT = "100"

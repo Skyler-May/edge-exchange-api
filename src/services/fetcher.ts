@@ -7,11 +7,13 @@ import { isInCooldown } from '../utils/circuitBreaker.js';
 import { aggregateHourly } from './aggregator.js';
 
 const PAIRS = [
-  // 核心交易对（重点）
+  // 重点
   { base: 'BTC', target: 'USDT' },
   { base: 'ETH', target: 'USDT' },
   { base: 'TRX', target: 'USDT' },
-    // 备用主流币种
+  // 核心交易对（法币）
+  { base: 'USD', target: 'CNY' },
+  // 备用主流币种
   { base: 'SOL', target: 'USDT' },
   { base: 'BNB', target: 'USDT' },
   { base: 'XRP', target: 'USDT' },
@@ -20,48 +22,73 @@ const PAIRS = [
   { base: 'DOGE', target: 'USDT' },
 ];
 
-function buildUrl(baseUrl: string, base: string, target: string): string {
-  if (baseUrl.includes('binance')) {
-    return `${baseUrl}?symbol=${base}${target}`;
-  }
-  if (baseUrl.includes('okx')) {
-    return `${baseUrl}?instId=${base}-${target}`;
-  }
-  if (baseUrl.includes('coinbase')) {
-    return `${baseUrl}?base=${base}&currency=${target}`;
-  }
-  if (baseUrl.includes('cryptocompare')) {
-    // CryptoCompare 的 URL 格式：https://min-api.cryptocompare.com/data/price?fsym={base}&tsyms={target}
-    // 注意 {base} 和 {target} 已经在 SQL 中写好了，无需替换
-    return baseUrl.replace(/\{base\}/g, base).replace(/\{target\}/g, target);
-  }
-  // 通用替换
-  return baseUrl.replace(/\{base\}/g, base).replace(/\{target\}/g, target);
+// ---------- 辅助函数：按点号路径取值 ----------
+function getValueByPath(obj: any, path: string): any {
+  if (!path) return obj;
+  return path.split('.').reduce((current, key) => current?.[key], obj);
 }
 
-function parsePrice(sourceName: string, data: any, base: string, target: string): number | null {
+// ---------- 从 config 构建 URL ----------
+function buildUrlFromConfig(source: DataSource, base: string, target: string): string {
+  let urlTemplate = source.base_url;
+  // 如果 config 中有 url_template，优先使用
+  if (source.config) {
+    try {
+      const config = JSON.parse(source.config);
+      if (config.url_template) {
+        urlTemplate = config.url_template;
+      }
+    } catch (e) {
+      // config 解析失败，忽略
+    }
+  }
+  return urlTemplate.replace(/\{base\}/g, base).replace(/\{target\}/g, target);
+}
+
+// ---------- 从 config 解析价格 ----------
+function parsePriceFromConfig(data: any, source: DataSource, base: string, target: string): number | null {
+  if (!source.config) {
+    // 无 config，尝试通用解析
+    return parseFloat(data.price || data.last || data.close || data.rate) || null;
+  }
+
+  let config: any;
   try {
-    if (sourceName === 'Binance') return parseFloat(data.price);
-    if (sourceName === 'OKX') return parseFloat(data.data?.[0]?.last);
-    if (sourceName === 'Coinbase') return parseFloat(data.data?.amount);
-    if (sourceName === 'CryptoCompare') {
-      const targetKey = Object.keys(data)[0] || 'USDT';
-      return parseFloat(data[targetKey]);
-    }
-    if (sourceName === 'Gate.io') {
-      // 注意：Gate.io 的 currency_pair 格式为 "BTC_USDT"
-      const ticker = data.tickers?.find((t: any) => t.currency_pair === `${base}_${target}`);
-      return ticker ? parseFloat(ticker.last) : null;
-    }
-    // 通用兜底
-    return parseFloat(data.price || data.last || data.close || data.rate);
+    config = JSON.parse(source.config);
   } catch {
     return null;
   }
+
+  // 1. 如果有 list_path，则在数组中查找
+  if (config.list_path) {
+    const list = getValueByPath(data, config.list_path);
+    if (Array.isArray(list) && config.item_key && config.item_value) {
+      const matchValue = config.item_value.replace(/\{base\}/g, base).replace(/\{target\}/g, target);
+      const item = list.find((el: any) => String(getValueByPath(el, config.item_key)) === matchValue);
+      if (item) {
+        const pricePath = config.price_path_in_item || config.price_path;
+        if (pricePath) {
+          const val = getValueByPath(item, pricePath);
+          if (val !== undefined) return parseFloat(val);
+        }
+      }
+    }
+    return null;
+  }
+
+  // 2. 直接按 price_path 取值
+  if (config.price_path) {
+    const val = getValueByPath(data, config.price_path);
+    if (val !== undefined) return parseFloat(val);
+  }
+
+  // 3. 兜底：尝试通用字段
+  return parseFloat(data.price || data.last || data.close || data.rate) || null;
 }
 
+// ---------- doFetch ----------
 async function doFetch(source: DataSource, base: string, target: string): Promise<number | null> {
-  const url = buildUrl(source.base_url, base, target);
+  const url = buildUrlFromConfig(source, base, target);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), source.timeout_ms || 3000);
   try {
@@ -69,13 +96,14 @@ async function doFetch(source: DataSource, base: string, target: string): Promis
     clearTimeout(timeout);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
-    return parsePrice(source.name, data, base, target);
+    return parsePriceFromConfig(data, source, base, target);
   } catch (err) {
     clearTimeout(timeout);
     throw err;
   }
 }
 
+// ---------- 其余函数保持不变 ----------
 export async function fetchRateForPair(base: string, target: string, env: Env): Promise<RateResult> {
   const sources = await getActiveSources(env);
   const sorted = sources
@@ -106,7 +134,6 @@ export async function getLatestRate(base: string, target: string, env: Env): Pro
 
   const result = await fetchRateForPair(base, target, env);
   await setCache(cacheKey, { ...result, cached: false }, 300, env);
-  // 异步写入历史
   if (env.ctx) {
     env.ctx.waitUntil(insertRate(base, target, result.rate, result.source, result.timestamp, env));
   }
@@ -126,7 +153,6 @@ export async function fetchAndStoreAllRates(env: Env) {
       await logSystem('error', `拉取 ${pair.base}/${pair.target} 失败`, 'cron', { error: (err as Error).message }, env);
     }
   }
-  // 执行小时聚合（异步）
   if (env.ctx) {
     env.ctx.waitUntil(aggregateHourly(env));
   }

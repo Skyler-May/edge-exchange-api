@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS data_sources (
   timeout_ms INTEGER DEFAULT 3000,
   fail_count INTEGER DEFAULT 0,
   last_fail_time TEXT,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  config TEXT
 );
 
 -- 汇率历史（分钟级）
@@ -50,9 +51,9 @@ CREATE TABLE IF NOT EXISTS system_logs (
   timestamp INTEGER DEFAULT (strftime('%s', 'now'))
 );
 
--- 初始化主流交易所（只执行一次）
 INSERT OR IGNORE INTO data_sources (name, base_url, priority, is_main) VALUES 
 ('Binance','https://api.binance.com/api/v3/ticker/price',1,true),
 ('OKX','https://www.okx.com/api/v5/market/ticker',2,true),
 ('Coinbase','https://api.coinbase.com/v2/prices/spot',3,true),
-('GateIo','https://api.gateio.ws/api/v4/spot/tickers',4,true);
+('GateIo','https://api.gateio.ws/api/v4/spot/tickers',4,true),
+('Frankfurter','https://api.frankfurter.app/latest?from={base}&to={target}',5,true);
