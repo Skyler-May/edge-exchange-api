@@ -5,7 +5,7 @@ export function getAdminPanel(apiKey: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>⚡ FX Gateway | Dashboard</title>
+  <title>⚡ FX Gateway | Control Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -31,7 +31,6 @@ export function getAdminPanel(apiKey: string): string {
       background-color: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding: 2.5rem 1.5rem;
       background-image: 
         radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 70%),
         linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
@@ -39,9 +38,77 @@ export function getAdminPanel(apiKey: string): string {
       background-size: 100% 100%, 30px 30px, 30px 30px;
     }
 
-    .container { max-width: 1100px; margin: 0 auto; }
+    /* 登录屏 Login Screen */
+    .login-wrapper {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(circle at 50% 30%, rgba(56, 189, 248, 0.15) 0%, transparent 60%),
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
+    }
 
-    /* 顶部 App Header */
+    .login-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      padding: 2.5rem;
+      border-radius: 24px;
+      width: 90%;
+      max-width: 420px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(56, 189, 248, 0.1);
+      text-align: center;
+      animation: zoomIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes zoomIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .login-card h2 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-card p {
+      color: var(--text-dim);
+      font-size: 0.875rem;
+      margin-bottom: 2rem;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .login-form input {
+      width: 100%;
+      padding: 0.85rem 1.25rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
+
+    /* 主控制台 Main Admin Console */
+    .app-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+      display: none; /* 未登录前隐藏 */
+    }
+
     .header {
       display: flex;
       justify-content: space-between;
@@ -174,6 +241,13 @@ export function getAdminPanel(apiKey: string): string {
       border: 1px solid var(--border);
     }
     .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+    .btn-danger {
+      background: rgba(248, 113, 113, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+    }
+    .btn-danger:hover { background: rgba(248, 113, 113, 0.25); }
 
     /* 数据源卡片 Source List */
     .list-title {
@@ -319,14 +393,30 @@ export function getAdminPanel(apiKey: string): string {
   </style>
 </head>
 <body>
-<div class="container">
-  
+
+<!-- 1. 登录界面 -->
+<div class="login-wrapper" id="loginWrapper">
+  <div class="login-card">
+    <h2>⚡ Admin Login</h2>
+    <p>请输入后台 API 密钥开启管理权限</p>
+    <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
+      <input type="password" id="inputApiKey" placeholder="输入 Admin API Key..." required />
+      <button type="submit" class="btn btn-primary" style="width: 100%;">验证身份并登录</button>
+    </form>
+  </div>
+</div>
+
+<!-- 2. 管理面板容器 -->
+<div class="app-container" id="appContainer">
   <div class="header">
     <div class="brand">
       <h1>⚡ Control Panel</h1>
       <p>FX Gateway 节点控制器 & 数据源聚合路由管理</p>
     </div>
-    <button class="btn btn-secondary" onclick="copyApiKey()">🔑 复制 API Key</button>
+    <div style="display: flex; gap: 0.5rem;">
+      <button class="btn btn-secondary" onclick="copyApiKey()">🔑 复制 Key</button>
+      <button class="btn btn-danger" onclick="handleLogout()">🚪 退出登录</button>
+    </div>
   </div>
 
   <!-- Dashboard 指标板 -->
@@ -388,7 +478,7 @@ export function getAdminPanel(apiKey: string): string {
 
 <script>
   const API_BASE = '/api/admin/sources';
-  const API_KEY = '${apiKey}';
+  let CURRENT_API_KEY = localStorage.getItem('fx_admin_key') || '';
 
   let sources = [];
   let editingId = null;
@@ -401,8 +491,49 @@ export function getAdminPanel(apiKey: string): string {
   };
 
   const copyApiKey = () => {
-    navigator.clipboard.writeText(API_KEY);
+    if(!CURRENT_API_KEY) return;
+    navigator.clipboard.writeText(CURRENT_API_KEY);
     toast('🔑 API Key 已复制到剪贴板');
+  };
+
+  /* 认证与登录逻辑 */
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const inputKey = document.getElementById('inputApiKey').value.trim();
+    if (!inputKey) return;
+
+    // 发起测试请求验证 Key 正确性
+    try {
+      const res = await fetch(API_BASE, { headers: { 'x-api-key': inputKey } });
+      if (res.status === 401 || res.status === 403) {
+        toast('❌ API Key 不正确，拒绝访问', 'error');
+        return;
+      }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+
+      // 验证通过，保存状态
+      CURRENT_API_KEY = inputKey;
+      localStorage.setItem('fx_admin_key', inputKey);
+      
+      document.getElementById('loginWrapper').style.display = 'none';
+      document.getElementById('appContainer').style.display = 'block';
+      toast('⚡ 身份验证成功，欢迎回来');
+      
+      sources = await res.json();
+      renderSources();
+      updateMetrics();
+    } catch (err) {
+      toast('验证失败: ' + err.message, 'error');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('fx_admin_key');
+    CURRENT_API_KEY = '';
+    document.getElementById('loginWrapper').style.display = 'flex';
+    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('inputApiKey').value = '';
+    toast('已安全退出后台');
   };
 
   const updateMetrics = () => {
@@ -412,8 +543,14 @@ export function getAdminPanel(apiKey: string): string {
   };
 
   const fetchSources = async () => {
+    if (!CURRENT_API_KEY) return;
     try {
-      const res = await fetch(API_BASE, { headers: { 'x-api-key': API_KEY } });
+      const res = await fetch(API_BASE, { headers: { 'x-api-key': CURRENT_API_KEY } });
+      if (res.status === 401 || res.status === 403) {
+        handleLogout();
+        toast('密钥已失效，请重新登录', 'error');
+        return;
+      }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       sources = await res.json();
       renderSources();
@@ -463,7 +600,7 @@ export function getAdminPanel(apiKey: string): string {
     try {
       const res = await fetch(API_BASE, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': CURRENT_API_KEY },
         body: JSON.stringify({ name, base_url, priority })
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -481,7 +618,7 @@ export function getAdminPanel(apiKey: string): string {
     try {
       const res = await fetch(API_BASE + '/' + id, {
         method: 'DELETE',
-        headers: { 'x-api-key': API_KEY }
+        headers: { 'x-api-key': CURRENT_API_KEY }
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       toast('🗑️ 节点卸载成功');
@@ -512,7 +649,7 @@ export function getAdminPanel(apiKey: string): string {
     try {
       const res = await fetch(API_BASE + '/' + id, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': CURRENT_API_KEY },
         body: JSON.stringify({ name, base_url, priority, is_active })
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -534,7 +671,12 @@ export function getAdminPanel(apiKey: string): string {
     if (e.target === e.currentTarget) document.getElementById('editModal').classList.remove('active');
   });
 
-  fetchSources();
+  // 页面加载自动尝试恢复登录状态
+  if (CURRENT_API_KEY) {
+    document.getElementById('loginWrapper').style.display = 'none';
+    document.getElementById('appContainer').style.display = 'block';
+    fetchSources();
+  }
 </script>
 </body>
 </html>`;
